@@ -1,0 +1,24 @@
+{
+  "name": "base-app",
+  "version": "1.0.0",
+  "description": "A base for futures apps",
+  "main": "index.js",
+  "scripts": {
+    "dev": "tsx watch src/http/index.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/viniciosragazzidev/base-app.git"
+  },
+  "author": "kyper.ag (Vinicios Ragazzi)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/viniciosragazzidev/base-app/issues"
+  },
+  "homepage": "https://github.com/viniciosragazzidev/base-app#readme",
+  "devDependencies": {
+    "@types/node": "^24.0.7",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3"
+  }
+}
