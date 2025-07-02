@@ -50,11 +50,17 @@ export async function loginController(request: FastifyRequest, reply: FastifyRep
         return reply.status(403).send({ message: 'Limite de sessões atingido.' })
     }
 
+    console.log('>>> Cookie setado com:', result.refreshToken)
 
 
 
-
-    return reply.status(200).send({ token: result })
+    return reply.status(200).setCookie('refreshToken', result.refreshToken, {
+        httpOnly: true,
+        secure: false, // OK pra dev
+        sameSite: 'strict', // tranquilo porque agora parece tudo mesmo domínio
+        path: '/',
+        maxAge: 60 * 60 * 24 * 7
+    }).send(result)
 }
 
 
@@ -67,17 +73,34 @@ export async function googleLoginController(request: FastifyRequest, reply: Fast
         return reply.status(401).send({ message: 'Google login inválido' })
     }
 
-    return reply.status(200).send(result)
+    const { accessToken, refreshToken } = result as { accessToken: string, refreshToken: string }
+
+    return reply.status(200).setCookie('refreshToken', refreshToken, {
+        httpOnly: true,
+        secure: false, // OK pra dev
+        sameSite: 'strict', // tranquilo porque agora parece tudo mesmo domínio
+        path: '/',
+        maxAge: 60 * 60 * 24 * 7
+    }).send(result)
 
 }
 
+// Nota: Refresh token serve para termos um token de acesso com maior tempo de expiração    
 export async function refreshController(request: FastifyRequest, reply: FastifyReply) {
-    const schema = z.object({
-        refreshToken: z.string().uuid(),
+    const refreshToken = request.cookies.refreshToken
+
+
+    if (!refreshToken) {
+        return reply.status(401).send({ message: 'Refresh token não encontrado' })
+    }
+
+    const session = await prisma.session.findUnique({
+        where: { refreshToken }
     })
 
-    const { refreshToken } = schema.parse(request.body)
-
+    if (!session) {
+        return reply.status(401).send({ message: 'Sessão expirada' })
+    }
     const token = await refreshAccessTokenService(refreshToken)
 
     if (token === 401) {
@@ -88,13 +111,17 @@ export async function refreshController(request: FastifyRequest, reply: FastifyR
 }
 
 export async function logoutController(request: FastifyRequest, reply: FastifyReply) {
-    const schema = z.object({
-        refreshToken: z.string().uuid(),
-    })
+    const cookie = request.cookies.refreshToken
+    console.log('Cookies recebidos no logout:', request.cookies)
 
-    const { refreshToken } = schema.parse(request.body)
+
+
+    const refreshToken = cookie as string
 
     await logoutUserService(refreshToken)
 
-    return reply.status(200).send({ message: 'Logout feito com sucesso' })
+    return reply
+        .clearCookie('refreshToken', { path: '/' })
+        .status(200)
+        .send({ message: 'Logout realizado com sucesso' })
 }

@@ -67,7 +67,8 @@ export const loginUserService = async ({ email, password }: { email: string, pas
         user: {
             id: user.id,
             role: user.role,
-        }
+        },
+        message: 'Login feito com sucesso'
     }
 
 }
