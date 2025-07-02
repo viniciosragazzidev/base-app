@@ -6,3 +6,5 @@ no tsconfig.json add o script     "generate:routes": "tsr generate"
 
 
 e depois da o comando      "generate:routes": "tsr generate"
+
+
